@@ -61,7 +61,7 @@ public final class Lint {
 
     public static void main(final String[] args) throws Exception {
         final Path root = Path.of(System.getenv("JPM_PROJECT_DIR")).getParent();
-        final String jpm = System.getenv().getOrDefault("JPM_BIN", "jpm");
+        final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
         final String javac = Path.of(System.getenv("JPM_JAVA_HOME"), "bin", "javac").toString();
         final List<String> modules = args.length > 0 ? List.of(args) : MODULES;
 

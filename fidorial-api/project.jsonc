@@ -1,6 +1,8 @@
 {
   "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
   "name": "fidorial-api",
+  // not inherited from the workspace root
+  "java": "25",
   "description": "Plugin API for the Fidorial Minecraft server",
   "license": "MIT",
   "url": "https://repo.euphyllia.moe",
@@ -29,6 +31,18 @@
   },
   "javacArgs": ["--add-reads", "fr.fidorial=ALL-UNNAMED"],
   "extensions": {
+    // `jpm publish euphyllia --module fidorial-api` (jpm-publish), with JPM_PUBLISH_EUPHYLLIA_USERNAME/_PASSWORD
+    "publish": {
+      "repositories": {
+        "euphyllia": {
+          "url": "https://repo.euphyllia.moe/repository/maven-releases/",
+          "snapshots": "https://repo.euphyllia.moe/repository/maven-snapshots/"
+        }
+      },
+      "developers": [ { "name": "Euphyllia Bierque" } ],
+      "scm": "https://github.com/Euphillya/Fidorial",
+      "javadoc": true
+    },
     // `jpm run generate-registries` (from the root), see fidorial-registry-generator
     "registry-generator": {
       // "--server" additionally dumps the vanilla tag files the dataset is built from.

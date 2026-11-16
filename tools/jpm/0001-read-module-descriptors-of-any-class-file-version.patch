@@ -1,0 +1,21 @@
+diff --git a/src/dev/jpm/build/Modules.java b/src/dev/jpm/build/Modules.java
+index 3c1d738..2c7b214 100644
+--- a/src/dev/jpm/build/Modules.java
++++ b/src/dev/jpm/build/Modules.java
+@@ -100,6 +100,16 @@ public final class Modules {
+     /** Reads the module name from a module-info.class (its Module attribute's first entry). */
+     static String moduleNameFromBytes(byte[] b) {
+         try {
++            // ModuleDescriptor.read rejects class files newer than the JDK jpm runs on (the native binary is
++            // built with 21, so a module compiled for 25 would read as no module at all). The Module attribute
++            // has not changed since 53 (Java 9), so read a copy marked as version 53.
++            if (b.length >= 8) {
++                b = b.clone();
++                b[4] = 0;
++                b[5] = 0;
++                b[6] = 0;
++                b[7] = 53;
++            }
+             java.lang.module.ModuleDescriptor d = java.lang.module.ModuleDescriptor.read(java.nio.ByteBuffer.wrap(b));
+             return d.name();
+         } catch (RuntimeException e) {

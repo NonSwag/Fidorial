@@ -24,7 +24,7 @@ final class JpmInfo {
     }
 
     static JsonObject read(final Path project) throws IOException, InterruptedException {
-        final String jpm = System.getenv().getOrDefault("JPM_BIN", "jpm");
+        final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
         final Process p = new ProcessBuilder(jpm, "info", "--json", "--ide")
                 .directory(project.toFile())
                 .redirectError(ProcessBuilder.Redirect.INHERIT)

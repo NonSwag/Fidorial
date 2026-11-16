@@ -2,6 +2,8 @@
 {
   "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
   "name": "fidorial-test-plugin",
+  // not inherited from the workspace root
+  "java": "25",
   "layout": "maven",
   "visibility": "internal",
   "dev": {

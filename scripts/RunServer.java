@@ -28,7 +28,7 @@ public final class RunServer {
     /** Builds the test plugin and the server, then copies the plugin to {@code <workDir>/plugins/TestPlugin.jar}. */
     static void installTestPlugin(final Path workDir) throws Exception {
         final Path project = Path.of(System.getenv("JPM_PROJECT_DIR"));
-        final int built = new ProcessBuilder(System.getenv().getOrDefault("JPM_BIN", "jpm"), "build",
+        final int built = new ProcessBuilder(System.getenv().getOrDefault("JPM_EXE", "jpm"), "build",
                 "fidorial-test-plugin", "fidorial-server")
                 .directory(project.toFile()).inheritIO().start().waitFor();
         if (built != 0) {

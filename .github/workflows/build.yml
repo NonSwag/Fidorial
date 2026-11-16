@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       upload-jar:
-        description: "Publish the fat jar as an artifact"
+        description: "Publish the server jar as an artifact"
         type: boolean
         default: false
       artifact-name:
@@ -28,19 +28,19 @@ on:
         required: false
     outputs:
       version:
-        description: "Version declared in gradle.properties"
+        description: "Fidorial version declared in project.jsonc"
         value: ${{ jobs.build.outputs.version }}
       build-number:
-        description: "Build number in the versions, counted from the last change of minecraftVersion"
+        description: "Build number in the versions, counted from the last change of the Minecraft version"
         value: ${{ jobs.build.outputs.build-number }}
       maven-version:
-        description: "Version of the Maven artifacts, as computed by settings.gradle.kts"
+        description: "Version of the Maven artifacts: <minecraft version>-build.<build>+<fidorial version>"
         value: ${{ jobs.build.outputs.maven-version }}
       artifact-url:
         description: "Artifact download URL (requires being signed in to GitHub)"
         value: ${{ jobs.build.outputs.artifact-url }}
       jar-name:
-        description: "File name of the built fat jar"
+        description: "File name of the built server jar"
         value: ${{ jobs.build.outputs.jar-name }}
 
 jobs:
@@ -61,12 +61,15 @@ jobs:
         with:
           fetch-depth: 0
       # Counted on the branch itself, so that builds of different branches do not share one sequence;
-      # needs the whole history (fetch-depth: 0). settings.gradle.kts reads BUILD_NUMBER.
+      # needs the whole history (fetch-depth: 0). fidorial-server reads BUILD_NUMBER (its BUILD_NUMBER define).
+      # The Minecraft version was in gradle.properties before the move to jpm, it is in fidorial-server/project.jsonc now.
       - name: Compute build number
         id: build-number
         run: |
           set -euo pipefail
-          base=$(git log -1 --format=%H -G'^[[:space:]]*minecraftVersion[[:space:]]*[=:]' -- gradle.properties)
+          base=$(git log -1 --format=%H \
+            -G'(^[[:space:]]*minecraftVersion[[:space:]]*[=:]|"MINECRAFT_VERSION_ID")' \
+            -- gradle.properties fidorial-server/project.jsonc)
           if [ -n "$base" ]; then
             number=$(( $(git rev-list --count "$base..HEAD") + 1 ))
           else
@@ -74,57 +77,93 @@ jobs:
           fi
           echo "BUILD_NUMBER=$number" >> "$GITHUB_ENV"
           echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      # jpm needs a JDK 25 to build itself from source (tools/jpm/install.sh) and builds Fidorial with it.
       - name: Set up JDK 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 25
 
-      # Includes Gradle caching and wrapper validation
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: Cache jpm downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.jpm/repository
+          key: jpm-${{ runner.os }}-${{ hashFiles('**/project.lock') }}
+          restore-keys: jpm-${{ runner.os }}-
+
+      - name: Install jpm
+        run: |
+          set -euo pipefail
+          tools/jpm/install.sh
+          echo "$HOME/.jpm/bin" >> "$GITHUB_PATH"
 
       - name: Read version
         id: version
         run: |
           set -euo pipefail
-          version=$(./gradlew --quiet printVersion | tail -n 1)
-          echo "maven-version=$version" >> "$GITHUB_OUTPUT"
+          version=$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' project.jsonc | head -n 1)
+          minecraft=$(sed -n 's/.*"MINECRAFT_VERSION_ID": *{[^}]*"value": *"\([^"]*\)".*/\1/p' fidorial-server/project.jsonc)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "maven-version=$minecraft-build.$BUILD_NUMBER+$version" >> "$GITHUB_OUTPUT"
 
-      # Also checks formatting
-      - name: Build and test
-        run: ./gradlew build
+      # Fails when a project.lock does not match its project.jsonc
+      - name: Resolve dependencies
+        run: |
+          set -euo pipefail
+          jpm install --frozen
+          (cd fidorial-build-tools && jpm install --frozen)
+          (cd fidorial-registry-generator && jpm install --frozen)
 
-      - name: Upload SpotBugs reports
+      - name: Check formatting
+        run: jpm run format --check
+
+      - name: Build
+        run: jpm build
+
+      - name: Test
+        run: jpm test
+
+      - name: ErrorProne and NullAway
+        run: jpm run lint
+
+      - name: SpotBugs
+        run: jpm run spotbugs
+
+      - name: Upload SpotBugs report
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: spotbugs-reports
-          path: |
-            **/build/reports/spotbugs*
+          path: fidorial-server/.cache/reports/spotbugs.html
           if-no-files-found: ignore
           retention-days: ${{ inputs.retention-days }}
 
+      # jpm-publish publishes the version in project.jsonc, so it is set to the Maven version for this step only.
       - name: Publish the API
         if: inputs.publish-api
         env:
           # repository secrets first, repository variables otherwise
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME || vars.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD || vars.NEXUS_PASSWORD }}
+          JPM_PUBLISH_EUPHYLLIA_USERNAME: ${{ secrets.NEXUS_USERNAME || vars.NEXUS_USERNAME }}
+          JPM_PUBLISH_EUPHYLLIA_PASSWORD: ${{ secrets.NEXUS_PASSWORD || vars.NEXUS_PASSWORD }}
           MAVEN_VERSION: ${{ steps.version.outputs.maven-version }}
         run: |
           set -euo pipefail
-          if [ -z "$NEXUS_USERNAME" ] || [ -z "$NEXUS_PASSWORD" ]; then
+          if [ -z "$JPM_PUBLISH_EUPHYLLIA_USERNAME" ] || [ -z "$JPM_PUBLISH_EUPHYLLIA_PASSWORD" ]; then
             echo "::error::NEXUS_USERNAME and NEXUS_PASSWORD are neither repository secrets nor variables"
             exit 1
           fi
-          ./gradlew :fidorial-api:publish
+          jpm add -g github:java-package-manager/jpm-publish
+          sed -i "0,/\"version\": *\"[^\"]*\"/s//\"version\": \"$MAVEN_VERSION\"/" project.jsonc
+          jpm publish euphyllia --module fidorial-api
           echo "::notice::Published fr.fidorial:fidorial-api:$MAVEN_VERSION"
           echo "Published \`fr.fidorial:fidorial-api:$MAVEN_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Collect jar metadata
         id: jar
         if: inputs.upload-jar
         run: |
-          jar=$(ls fidorial-server/build/libs/*.jar | head -1)
+          jar=$(ls fidorial-server/dist/Fidorial-*.jar | head -1)
           echo "name=$(basename "$jar")" >> "$GITHUB_OUTPUT"
           echo "size=$(du -h "$jar" | cut -f1)" >> "$GITHUB_OUTPUT"
 
@@ -134,6 +173,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name }}
-          path: fidorial-server/build/libs/*.jar
+          path: fidorial-server/dist/Fidorial-*.jar
           if-no-files-found: error
           retention-days: ${{ inputs.retention-days }}
