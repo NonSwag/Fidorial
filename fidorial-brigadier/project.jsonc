@@ -1,0 +1,22 @@
+// Mojang's Brigadier with Fidorial's patches (Adventure interop), used by fidorial-server in place of
+// com.mojang:brigadier. src/ is generated from brigadier's sources jar and patches/ before every build,
+// see scripts/PatchedSources.java. Edit src/main/java, then `jpm run diff > patches/com.mojang_brigadier.patch`.
+{
+  "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
+  "name": "fidorial-brigadier",
+  "layout": "maven",
+  "visibility": "internal",
+  "dev": {
+    "com.mojang:brigadier": "1.3.11",
+    "net.kyori:adventure-api": "5.2.0",
+    "net.kyori:adventure-text-serializer-plain": "5.2.0",
+    "org.jspecify:jspecify": "1.0.1"
+  },
+  "scripts": {
+    "patched-sources": "../scripts/PatchedSources.java",
+    "diff": "java ../scripts/PatchedSources.java diff"
+  },
+  "hooks": {
+    "prebuild": "patched-sources"
+  }
+}

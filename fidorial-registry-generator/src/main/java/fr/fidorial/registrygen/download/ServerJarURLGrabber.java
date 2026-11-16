@@ -14,7 +14,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import static fr.fidorial.registrygen.FidorialRegistryGeneratorPlugin.DOWNLOAD_MANIFEST_URL;
 
 /**
  * The {@code ServerJarURLGrabber} class is a utility for retrieving server download information
@@ -28,6 +27,8 @@ import static fr.fidorial.registrygen.FidorialRegistryGeneratorPlugin.DOWNLOAD_M
  * @since 0.1.0
  */
 public final class ServerJarURLGrabber {
+
+    public static final String DOWNLOAD_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 
     /**
      * Fetches the server download information for a specific Minecraft version.

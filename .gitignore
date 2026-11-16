@@ -56,3 +56,6 @@ fidorial-server/ops.json
 !tool/registry-generator/
 tool/registry-generator/*
 !tool/registry-generator/generate.py
+### jpm ###
+.cache/
+dist/

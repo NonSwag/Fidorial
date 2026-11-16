@@ -1,0 +1,31 @@
+# Written by the registry generator (fidorial-registry-generator): sources it generated into src/main/java.
+# `jpm run format` leaves them alone, and the generator deletes the ones it no longer writes.
+src/main/java/fr/euphyllia/fidorial/server/entity/EntityTypes.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/ConfigurationClientboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/ConfigurationClientboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/ConfigurationServerboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/ConfigurationServerboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/HandshakeServerboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/HandshakeServerboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/LoginClientboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/LoginClientboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/LoginServerboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/LoginServerboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/PlayClientboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/PlayClientboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/PlayServerboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/PlayServerboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/StatusClientboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/StatusClientboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/StatusServerboundPacketIds.java
+src/main/java/fr/euphyllia/fidorial/server/network/protocol/catalog/StatusServerboundPackets.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/ArgumentTypeIds.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/BlockEntityTypeBlocks.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/BlockStateIds.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/BlockStateLightProperties.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/EntityProperties.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/EntityTypeIds.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/FrozenRegistries.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/ItemProperties.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/RegistryValues.java
+src/main/java/fr/euphyllia/fidorial/server/registry/data/SuggestionTypeIds.java

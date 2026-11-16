@@ -1,0 +1,101 @@
+diff --git a/com/mojang/brigadier/ComponentMessage.java b/com/mojang/brigadier/ComponentMessage.java
+new file mode 100644
+--- /dev/null
++++ b/com/mojang/brigadier/ComponentMessage.java
+@@ -0,0 +1,18 @@
++package com.mojang.brigadier;
++
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
++import org.jspecify.annotations.NonNull;
++
++record ComponentMessage(Component asComponent) implements Message {
++
++    @Override
++    public String getString() {
++        return PlainTextComponentSerializer.plainText().serialize(asComponent);
++    }
++
++    @Override
++    public @NonNull String toString() {
++        return getString();
++    }
++}
+diff --git a/com/mojang/brigadier/Message.java b/com/mojang/brigadier/Message.java
+--- a/com/mojang/brigadier/Message.java
++++ b/com/mojang/brigadier/Message.java
+@@ -3,6 +3,20 @@
+ 
+ package com.mojang.brigadier;
+ 
+-public interface Message {
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.text.ComponentLike;
++
++public interface Message extends ComponentLike { // Fidorial - adventure interop
+     String getString();
++
++    // Fidorial start - adventure interop
++    @Override
++    default Component asComponent() {
++        return Component.text(getString());
++    }
++
++    static Message component(final ComponentLike component) {
++        return new ComponentMessage(component.asComponent());
++    }
++    // Fidorial end - adventure interop
+ }
+diff --git a/com/mojang/brigadier/exceptions/CommandSyntaxException.java b/com/mojang/brigadier/exceptions/CommandSyntaxException.java
+--- a/com/mojang/brigadier/exceptions/CommandSyntaxException.java
++++ b/com/mojang/brigadier/exceptions/CommandSyntaxException.java
+@@ -4,8 +4,10 @@
+ package com.mojang.brigadier.exceptions;
+ 
+ import com.mojang.brigadier.Message;
++import net.kyori.adventure.text.Component;
++import net.kyori.adventure.util.ComponentMessageThrowable;
+ 
+-public class CommandSyntaxException extends Exception {
++public class CommandSyntaxException extends Exception implements ComponentMessageThrowable { // Fidorial - adventure interop
+     public static final int CONTEXT_AMOUNT = 10;
+     public static boolean ENABLE_COMMAND_STACK_TRACES = true;
+     public static BuiltInExceptionProvider BUILT_IN_EXCEPTIONS = new BuiltInExceptions();
+@@ -73,4 +75,14 @@
+     public int getCursor() {
+         return cursor;
+     }
++
++    // Fidorial start - adventure interop
++    @Override
++    public Component componentMessage() {
++        final String context = getContext();
++        return context == null
++                ? message.asComponent()
++                : message.asComponent().append(Component.text(" at position " + cursor + ": " + context)); // keep in line with getMessage
++    }
++    // Fidorial end - adventure interop
+ }
+diff --git a/com/mojang/brigadier/tree/CommandNode.java b/com/mojang/brigadier/tree/CommandNode.java
+--- a/com/mojang/brigadier/tree/CommandNode.java
++++ b/com/mojang/brigadier/tree/CommandNode.java
+@@ -183,4 +183,19 @@
+     }
+ 
+     public abstract Collection<String> getExamples();
++    // Fidorial start - add method to remove child nodes
++
++    public void removeChild(final String nodeName) {
++        final CommandNode<S> child = children.remove(nodeName);
++        if (child == null) {
++            return;
++        }
++
++        if (child instanceof LiteralCommandNode) {
++            literals.remove(nodeName);
++        } else if (child instanceof ArgumentCommandNode) {
++            arguments.remove(nodeName);
++        }
++    }
++    // Fidorial end - add method to remove child nodes
+ }

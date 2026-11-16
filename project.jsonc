@@ -1,0 +1,27 @@
+// Fidorial workspace. Build with `jpm build`, test with `jpm test`; see readme.md for the other commands.
+{
+  "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
+  "name": "fidorial",
+  "group": "fr.fidorial",
+  // The Fidorial version. The Minecraft constants live in fidorial-server/project.jsonc ("define").
+  "version": "0.1.0",
+  "java": "25",
+  "workspace": ["fidorial-annotation-processor","fidorial-api","fidorial-auth","fidorial-bootstrap","fidorial-brigadier","fidorial-server","fidorial-test-plugin"],
+  // Code-quality tools, see fidorial-build-tools/project.jsonc
+  "scripts": {
+    "lint": "cd fidorial-build-tools && jpm run lint",
+    "format": "cd fidorial-build-tools && jpm run format",
+    "spotbugs": "cd fidorial-build-tools && jpm run spotbugs",
+    // Regenerates the registry sources and datasets of fidorial-api and fidorial-server
+    "generate-registries": "cd fidorial-registry-generator && jpm start -- ../fidorial-api ../fidorial-server"
+  },
+  "repositories": [
+    "https://libraries.minecraft.net",
+    "https://repo.papermc.io/repository/maven-public/",
+    "https://repo.lucko.me/",
+    // Geyser's configurate fork
+    "https://repo.opencollab.dev/maven-releases",
+    "https://repo.opencollab.dev/maven-snapshots",
+    "https://repo.faststats.dev/releases"
+  ]
+}
