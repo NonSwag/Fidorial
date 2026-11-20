@@ -11,7 +11,7 @@
 #   tools/jpm/install.sh            # JPM_HOME changes the install root (default ~/.jpm)
 set -eu
 
-commit=225e88645a06b0d7312312156e6ce4cdd99a08cd
+commit=eb9d637b767898817d2af46809e28d30c9448f74
 home="${JPM_HOME:-$HOME/.jpm}"
 src="$home/src/jpm-${commit%"${commit#???????}"}"
 java_bin="${JAVA_HOME:+$JAVA_HOME/bin/}"

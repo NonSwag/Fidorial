@@ -29,6 +29,9 @@ public final class Lint {
             "fidorial-bootstrap",
             "fidorial-server");
 
+    /** A module's source folders: its own and the registry generator's output. */
+    private static final List<String> SOURCE_DIRS = List.of("src/main/java", "src/generated/java");
+
     private static final List<String> ERROR_PRONE = List.of(
             "-XDcompilePolicy=simple",
             "--should-stop=ifError=FLOW",
@@ -64,7 +67,7 @@ public final class Lint {
 
     public static void main(final String[] args) throws Exception {
         final Path root = Path.of(System.getenv("JPM_PROJECT_DIR"));
-        final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
+        final String jpm = System.getenv("JPM_EXE");
         final String javac = Path.of(System.getenv("JPM_JAVA_HOME"), "bin", "javac").toString();
         final List<String> modules = args.length > 0 ? List.of(args) : MODULES;
 
@@ -131,7 +134,7 @@ public final class Lint {
                 }
                 default -> {
                     // the module's own sources are listed below, all of them; keep generated ones (BuildConfig)
-                    if (!(arg.endsWith(".java") && Path.of(arg).startsWith(module.resolve("src/main/java")))) {
+                    if (!(arg.endsWith(".java") && SOURCE_DIRS.stream().anyMatch(d -> Path.of(arg).startsWith(module.resolve(d))))) {
                         out.add(arg);
                     }
                 }
@@ -142,8 +145,13 @@ public final class Lint {
             out.add(plugins);
         }
         out.addAll(ERROR_PRONE);
-        try (Stream<Path> sources = Files.walk(module.resolve("src/main/java"))) {
-            sources.filter(f -> f.toString().endsWith(".java")).sorted().forEach(f -> out.add(f.toString()));
+        for (final String dir : SOURCE_DIRS) {
+            if (!Files.isDirectory(module.resolve(dir))) {
+                continue;
+            }
+            try (Stream<Path> sources = Files.walk(module.resolve(dir))) {
+                sources.filter(f -> f.toString().endsWith(".java")).sorted().forEach(f -> out.add(f.toString()));
+            }
         }
         for (final String dir : List.of("classes", "generated")) {
             deleteTree(scratch.resolve(dir));

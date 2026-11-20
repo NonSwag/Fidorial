@@ -13,9 +13,9 @@
     "fidorial-build-tools","fidorial-registry-generator"],
   // Code-quality tools, see fidorial-build-tools/project.jsonc
   "scripts": {
-    "lint": "cd fidorial-build-tools && jpm run lint",
-    "format": "cd fidorial-build-tools && jpm run format",
-    "spotbugs": "cd fidorial-build-tools && jpm run spotbugs",
+    "lint": "jpm run fidorial-build-tools:lint",
+    "format": "jpm run fidorial-build-tools:format",
+    "spotbugs": "jpm run fidorial-build-tools:spotbugs",
     // Regenerates the registry sources and datasets of fidorial-api and fidorial-server
     "generate-registries": "cd fidorial-registry-generator && jpm start -- ../fidorial-api ../fidorial-server"
   },

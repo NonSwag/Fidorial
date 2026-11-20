@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,8 +24,8 @@ import java.util.stream.Stream;
  * {@code jpm run format --check} only reports, and fails when a file is not formatted (CI).
  *
  * <p>The same steps, in the same order, as the Spotless configuration of the Gradle build
- * (build-logic's fidorial-spotless plugin), run through spotless-lib directly. Sources listed in a
- * module's {@code generated-sources.txt} are left alone, as {@code src/generated/**} was.
+ * (build-logic's fidorial-spotless plugin), run through spotless-lib directly. Generated sources
+ * ({@code src/generated/**}) are left alone.
  */
 public final class Format {
 
@@ -77,11 +76,10 @@ public final class Format {
         int files = 0;
         for (final String module : MODULES) {
             final Path dir = root.resolve(module);
-            final Set<Path> generated = generated(dir);
+            final Path generated = dir.resolve("src/generated");
             final List<Path> sources;
             try (Stream<Path> walk = Files.walk(dir.resolve("src"))) {
-                sources = walk.filter(f -> f.toString().endsWith(".java") && !generated.contains(dir.relativize(f)))
-                        .sorted().toList();
+                sources = walk.filter(f -> f.toString().endsWith(".java") && !f.startsWith(generated)).sorted().toList();
             }
             for (final Path file : sources) {
                 files++;
@@ -110,19 +108,6 @@ public final class Format {
         }
         System.out.println("    " + (check ? "Checked " : "Formatted ") + files + " file(s)"
                 + (check ? "" : ", " + unformatted.size() + " changed"));
-    }
-
-    private static Set<Path> generated(final Path module) throws Exception {
-        final Path list = module.resolve("generated-sources.txt");
-        final Set<Path> out = new HashSet<>();
-        if (Files.exists(list)) {
-            for (final String line : Files.readAllLines(list)) {
-                if (!line.isBlank() && !line.startsWith("#")) {
-                    out.add(Path.of(line.trim()));
-                }
-            }
-        }
-        return out;
     }
 
     private Format() {

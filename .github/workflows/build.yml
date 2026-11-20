@@ -135,13 +135,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: ${{ inputs.retention-days }}
 
-      # jpm-publish publishes the version in project.jsonc, so it is set to the Maven version for this step only.
+      # Published as the Maven version (JPM_VERSION_OVERRIDE); project.jsonc keeps the Fidorial version.
       - name: Publish the API
         if: inputs.publish-api
         env:
           # repository secrets first, repository variables otherwise
           JPM_PUBLISH_EUPHYLLIA_USERNAME: ${{ secrets.NEXUS_USERNAME || vars.NEXUS_USERNAME }}
           JPM_PUBLISH_EUPHYLLIA_PASSWORD: ${{ secrets.NEXUS_PASSWORD || vars.NEXUS_PASSWORD }}
+          # every module's version for this step; jpm-publish reads it from `jpm info --json`
+          JPM_VERSION_OVERRIDE: ${{ steps.version.outputs.maven-version }}
           MAVEN_VERSION: ${{ steps.version.outputs.maven-version }}
         run: |
           set -euo pipefail
@@ -150,7 +152,6 @@ jobs:
             exit 1
           fi
           jpm add -g github:java-package-manager/jpm-publish
-          sed -i "0,/\"version\": *\"[^\"]*\"/s//\"version\": \"$MAVEN_VERSION\"/" project.jsonc
           jpm publish euphyllia --module fidorial-api
           echo "::notice::Published fr.fidorial:fidorial-api:$MAVEN_VERSION"
           echo "Published \`fr.fidorial:fidorial-api:$MAVEN_VERSION\`" >> "$GITHUB_STEP_SUMMARY"

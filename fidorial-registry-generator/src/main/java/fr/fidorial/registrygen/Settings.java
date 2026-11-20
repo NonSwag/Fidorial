@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * @param module                      the module directory
  * @param minecraftVersion            {@code "minecraftVersion"}, else fidorial-server's {@code MINECRAFT_VERSION_ID} define
  * @param workingDirectory            downloads and Mojang's reports; {@code .cache/registry-generator}
- * @param generatedSourcesDirectory   {@code src/main/java}
+ * @param generatedSourcesDirectory   {@code src/generated/java}
  * @param generatedPackage            {@code fr.fidorial.registry}
  * @param registryDataPackage         {@code <generatedPackage>.data}
  * @param registryKeysPackage         {@code <generatedPackage>.keys}
@@ -110,7 +110,7 @@ public record Settings(
                 module,
                 c.has("minecraftVersion") ? c.get("minecraftVersion").getAsString() : serverMinecraftVersion(module),
                 module.resolve(string(c, "workingDirectory", ".cache/registry-generator")),
-                module.resolve(string(c, "generatedSourcesDirectory", "src/main/java")),
+                module.resolve(string(c, "generatedSourcesDirectory", "src/generated/java")),
                 generatedPackage,
                 string(c, "registryDataPackage", generatedPackage + ".data"),
                 keysPackage,

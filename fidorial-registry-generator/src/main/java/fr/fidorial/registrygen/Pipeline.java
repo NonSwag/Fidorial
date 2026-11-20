@@ -31,7 +31,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
@@ -67,8 +66,8 @@ public final class Pipeline {
             prismarine = downloadPrismarineData();
         }
 
-        // Java sources go to a staging directory first, so that the module's generated-sources.txt lists
-        // exactly what this run wrote, and what a previous run wrote and this one did not can be deleted.
+        // Java sources go to a staging directory first, and replace the module's generated folder only once
+        // everything was generated.
         deleteTree(staging);
         Files.createDirectories(staging);
         final RegistryGenerator generator = new RegistryGenerator();
@@ -278,45 +277,23 @@ public final class Pipeline {
     }
 
     /**
-     * Moves the staged sources into the module's source directory, deletes the sources an earlier run
-     * generated and this one did not, and rewrites {@code generated-sources.txt}.
+     * Replaces the module's generated source folder ({@code src/generated/java}) with the staged sources, so
+     * what an earlier run generated and this one did not is gone.
      */
     private void publishSources() throws IOException {
         final Path module = settings.module();
         final Path target = settings.generatedSourcesDirectory();
-        final Path list = module.resolve("generated-sources.txt");
-
-        final Set<String> previous = new TreeSet<>();
-        if (Files.exists(list)) {
-            for (final String line : Files.readAllLines(list)) {
-                if (!line.isBlank() && !line.startsWith("#")) {
-                    previous.add(line.trim());
-                }
-            }
-        }
-
-        final Set<String> written = new TreeSet<>();
+        deleteTree(target);
+        int written = 0;
         try (Stream<Path> walk = Files.walk(staging)) {
             for (final Path file : walk.filter(Files::isRegularFile).toList()) {
                 final Path destination = target.resolve(staging.relativize(file).toString());
                 Files.createDirectories(destination.getParent());
                 Files.copy(file, destination, StandardCopyOption.REPLACE_EXISTING);
-                written.add(module.relativize(destination).toString().replace('\\', '/'));
+                written++;
             }
         }
-        for (final String stale : previous) {
-            if (!written.contains(stale)) {
-                Files.deleteIfExists(module.resolve(stale));
-                log("Deleted " + stale + ", no longer generated");
-            }
-        }
-
-        final StringBuilder text = new StringBuilder()
-                .append("# Written by the registry generator (fidorial-registry-generator): sources it generated into src/main/java.\n")
-                .append("# `jpm run format` leaves them alone, and the generator deletes the ones it no longer writes.\n");
-        written.forEach(f -> text.append(f).append('\n'));
-        Files.writeString(list, text.toString());
-        log("Wrote " + written.size() + " generated source(s) into " + module.relativize(target));
+        log("Wrote " + written + " generated source(s) into " + module.relativize(target));
     }
 
     private static void deleteTree(final Path root) throws IOException {

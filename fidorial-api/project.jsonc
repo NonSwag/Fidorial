@@ -4,6 +4,8 @@
   "description": "Plugin API for the Fidorial Minecraft server",
   "license": "MIT",
   "url": "https://repo.euphyllia.moe",
+  // the registry generator's output (jpm run generate-registries) is committed in src/generated/java
+  "sources": ["src/main/java", "src/generated/java"],
   "visibility": "public",
   "runtime": {
     "net.kyori:adventure-api": "5.2.0",

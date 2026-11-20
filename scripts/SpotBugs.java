@@ -16,7 +16,7 @@ public final class SpotBugs {
 
     public static void main(final String[] args) throws Exception {
         final Path root = Path.of(System.getenv("JPM_PROJECT_DIR"));
-        final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
+        final String jpm = System.getenv("JPM_EXE");
         if (new ProcessBuilder(jpm, "build", "fidorial-server").directory(root.toFile()).inheritIO().start().waitFor() != 0) {
             System.exit(1);
         }

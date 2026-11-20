@@ -27,12 +27,17 @@ public final class ApiPackageIndex {
 
         // fidorial-api's own packages, read from its sources so the index does not need it built first
         // (javac writes one class, at least package-info, for every package with a source file)
-        final Path sources = Path.of(api.get("sourceDir").getAsString());
-        try (Stream<Path> walk = Files.walk(sources)) {
-            walk.filter(f -> f.toString().endsWith(".java") && !f.getFileName().toString().equals("module-info.java"))
-                    .map(f -> sources.relativize(f.getParent()).toString().replace(java.io.File.separatorChar, '.'))
-                    .filter(p -> !p.isEmpty())
-                    .forEach(packages::add);
+        for (final com.google.gson.JsonElement dir : api.getAsJsonArray("sourceDirs")) {
+            final Path sources = Path.of(dir.getAsString());
+            if (!Files.isDirectory(sources)) {
+                continue;
+            }
+            try (Stream<Path> walk = Files.walk(sources)) {
+                walk.filter(f -> f.toString().endsWith(".java") && !f.getFileName().toString().equals("module-info.java"))
+                        .map(f -> sources.relativize(f.getParent()).toString().replace(java.io.File.separatorChar, '.'))
+                        .filter(p -> !p.isEmpty())
+                        .forEach(packages::add);
+            }
         }
 
         // what the server has at runtime; a plugin's own copy of anything else still loads (parent-first falls back)
