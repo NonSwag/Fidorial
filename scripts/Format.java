@@ -45,12 +45,13 @@ public final class Format {
 
     public static void main(final String[] args) throws Exception {
         final boolean check = Arrays.asList(args).contains("--check");
-        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR")).getParent();
+        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR"));
 
         // RemoveUnusedImports runs google-java-format, which spotless asks a Provisioner for: hand it our classpath.
         final Set<File> classpath = new LinkedHashSet<>();
+        // jars only: spotless signs regular files, and the classpath also holds this module's (empty) classes directory
         for (final String entry : System.getenv("JPM_CLASSPATH").split(File.pathSeparator)) {
-            if (!entry.isEmpty()) {
+            if (!entry.isEmpty() && new File(entry).isFile()) {
                 classpath.add(new File(entry));
             }
         }

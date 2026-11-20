@@ -1,18 +1,19 @@
 #!/bin/sh
-# Installs the jpm Fidorial builds with: jpm 0.7.1 from source, with the patches in this directory applied,
-# as ~/.jpm/bin/jpm (a launcher for the jar build; needs a JDK 25 as JAVA_HOME or on PATH).
+# Installs the jpm Fidorial builds with as ~/.jpm/bin/jpm: a launcher for the jar build of jpm, built from source
+# (needs a JDK 25 as JAVA_HOME or on PATH).
 #
-# Why not the released binary: jpm 0.7.1's native binary is built with JDK 21, so it cannot read the
-# module-info.class of modules compiled for Java 25 and puts every one of them on the class path, which
-# breaks `requires fr.fidorial`. Drop this script once a jpm release has the fix.
+# Why not a released binary: Fidorial needs jpm fixes that are not released yet (pull requests on
+# java-package-manager/jpm, merged together on its integration/fidorial branch): Java 25 module descriptors in
+# the native binary, patches with dependencies, isolated modules, workspace inheritance, `-J` javac flags,
+# `info --classpath`, JPM_EXE and //DEPS for scripts, and not caching failed downloads. Pinned to one commit so
+# every build uses the same jpm. Drop this script once a jpm release has them.
 #
 #   tools/jpm/install.sh            # JPM_HOME changes the install root (default ~/.jpm)
 set -eu
 
-version=0.7.1
-here="$(cd "$(dirname "$0")" && pwd)"
+commit=225e88645a06b0d7312312156e6ce4cdd99a08cd
 home="${JPM_HOME:-$HOME/.jpm}"
-src="$home/src/jpm-$version-fidorial"
+src="$home/src/jpm-${commit%"${commit#???????}"}"
 java_bin="${JAVA_HOME:+$JAVA_HOME/bin/}"
 
 if ! "${java_bin}javac" --version 2>/dev/null | grep -q ' 2[5-9]\| [3-9][0-9]'; then
@@ -21,11 +22,11 @@ if ! "${java_bin}javac" --version 2>/dev/null | grep -q ' 2[5-9]\| [3-9][0-9]'; 
 fi
 
 rm -rf "$src"
-mkdir -p "$(dirname "$src")" "$home/bin"
-git clone --quiet --depth 1 --branch "$version" https://github.com/java-package-manager/jpm.git "$src"
-for patch in "$here"/*.patch; do
-  git -C "$src" apply "$patch"
-done
+mkdir -p "$src" "$home/bin"
+git -C "$src" init --quiet
+git -C "$src" fetch --quiet --depth 1 https://github.com/java-package-manager/jpm.git "$commit"
+git -C "$src" checkout --quiet FETCH_HEAD
+version=$(sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' "$src/project.jsonc" | head -n 1)-${commit%"${commit#???????}"}
 
 build="$src/.cache/bootstrap"
 mkdir -p "$build/classes" "$build/gen/dev/jpm"
@@ -34,12 +35,14 @@ printf 'package dev.jpm;\npublic final class BuildConfig {\n    private BuildCon
 find "$src/src" "$build/gen" -name '*.java' > "$build/sources.txt"
 "${java_bin}javac" --release 21 -nowarn -encoding UTF-8 -d "$build/classes" @"$build/sources.txt" 2>/dev/null
 printf 'Main-Class: dev.jpm.cli.Main\n' > "$build/manifest.txt"
-"${java_bin}jar" --create --file "$home/bin/jpm-$version-fidorial.jar" --manifest "$build/manifest.txt" -C "$build/classes" .
+"${java_bin}jar" --create --file "$home/bin/jpm-$version.jar" --manifest "$build/manifest.txt" -C "$build/classes" .
 
 java_home="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")}"
-cat > "$home/bin/jpm" <<EOF
+cat > "$home/bin/jpm" <<LAUNCHER
 #!/bin/sh
-exec "$java_home/bin/java" -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xshare:auto -jar "$home/bin/jpm-$version-fidorial.jar" "\$@"
-EOF
+# scripts and hooks call back into this jpm through JPM_EXE
+JPM_EXE="$home/bin/jpm"; export JPM_EXE
+exec "$java_home/bin/java" -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xshare:auto -jar "$home/bin/jpm-$version.jar" "\$@"
+LAUNCHER
 chmod +x "$home/bin/jpm"
-echo "Installed $("$home/bin/jpm" --version) (with Fidorial's patches) to $home/bin/jpm"
+echo "Installed $("$home/bin/jpm" --version) to $home/bin/jpm"

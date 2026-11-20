@@ -5,8 +5,12 @@
   "group": "fr.fidorial",
   // The Fidorial version. The Minecraft constants live in fidorial-server/project.jsonc ("define").
   "version": "0.1.0",
+  // java and layout are inherited by every module
   "java": "25",
-  "workspace": ["fidorial-annotation-processor","fidorial-api","fidorial-auth","fidorial-bootstrap","fidorial-brigadier","fidorial-server","fidorial-test-plugin"],
+  "layout": "maven",
+  "workspace": ["fidorial-annotation-processor","fidorial-api","fidorial-auth","fidorial-bootstrap","fidorial-server","fidorial-test-plugin",
+    // tooling, each resolved on its own ("isolated")
+    "fidorial-build-tools","fidorial-registry-generator"],
   // Code-quality tools, see fidorial-build-tools/project.jsonc
   "scripts": {
     "lint": "cd fidorial-build-tools && jpm run lint",

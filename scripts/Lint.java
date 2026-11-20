@@ -9,12 +9,15 @@ import java.util.stream.Stream;
  * {@code jpm run lint} (in fidorial-build-tools, or from the root): ErrorProne and NullAway over Fidorial's
  * modules, with the checks the Gradle build ran on every compile.
  *
- * <p>Why not in {@code "javacArgs"}: ErrorProne needs {@code -J--add-exports} for javac's own JVM, and javac
- * refuses {@code -J} options in the argument file jpm hands it. So this script builds the workspace, takes
- * the exact arguments jpm compiled each module with ({@code .cache/build/<module>/classes.args}), adds
- * ErrorProne, and runs javac again into a scratch directory. The build's output is not touched.
+ * <p>Why not in the build: jpm can now pass ErrorProne's {@code -J--add-exports} to javac (in {@code "javacArgs"}),
+ * but ErrorProne would have to be a {@code dev} dependency of every module, and dev dependencies are resolved
+ * with the server's: they would move error_prone_annotations and checker-qual on its runtime. So this script
+ * builds the workspace, takes the exact arguments jpm compiled each module with
+ * ({@code .cache/build/<module>/classes.args}), adds ErrorProne, and runs javac again into a scratch
+ * directory. The build's output is not touched.
  *
- * <p>The ErrorProne and NullAway jars come from this script's classpath (fidorial-build-tools' runtime).
+ * <p>The ErrorProne and NullAway jars come from this script's classpath: fidorial-build-tools' runtime, an
+ * isolated module, so they are resolved apart from the server.
  */
 public final class Lint {
 
@@ -60,7 +63,7 @@ public final class Lint {
             .toList();
 
     public static void main(final String[] args) throws Exception {
-        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR")).getParent();
+        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR"));
         final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
         final String javac = Path.of(System.getenv("JPM_JAVA_HOME"), "bin", "javac").toString();
         final List<String> modules = args.length > 0 ? List.of(args) : MODULES;

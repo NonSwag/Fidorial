@@ -2,10 +2,7 @@
 {
   "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
   "name": "fidorial-bootstrap",
-  // not inherited from the workspace root
-  "java": "25",
   "description": "Zero-dependency launcher: resolves Fidorial's runtime libraries, then hands over to the server.",
-  "layout": "maven",
   "visibility": "internal",
   "dev": {
     "org.jspecify:jspecify": "1.0.1"

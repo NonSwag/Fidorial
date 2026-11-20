@@ -3,9 +3,6 @@
 {
   "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
   "name": "fidorial-server",
-  // not inherited from the workspace root
-  "java": "25",
-  "layout": "maven",
   "visibility": "internal",
   "main": "fr.euphyllia.fidorial.server.Main",
   "defineClass": "fr.euphyllia.fidorial.server.BuildConfig",
@@ -21,9 +18,7 @@
     "BUILD_NUMBER": { "type": "int", "env": "BUILD_NUMBER", "default": -1 }
   },
   "runtime": {
-    // fidorial-api is compiled against upstream brigadier, the server runs the patched copy
-    "workspace:fidorial-api": { "version": "*", "exclude": ["com.mojang:brigadier"] },
-    "workspace:fidorial-brigadier": "*",
+    "workspace:fidorial-api": "*",
     "workspace:fidorial-auth": "*",
     "workspace:fidorial-bootstrap": "*",
 
@@ -90,6 +85,18 @@
     "posttest": "test-scenarios"
   },
   "patches": {
+    // Adventure interop: Message is a ComponentLike. The patched classes use Adventure and a record, so they
+    // get Adventure at compile time and are compiled for Java 25 rather than brigadier's Java 8. To change the
+    // patch: `jpm patch com.mojang:brigadier`, edit, `jpm patch --commit com.mojang:brigadier`.
+    "com.mojang:brigadier": {
+      "file": "patches/com.mojang_brigadier.patch",
+      "dependencies": {
+        "net.kyori:adventure-api": "5.2.0",
+        "net.kyori:adventure-text-serializer-plain": "5.2.0",
+        "org.jspecify:jspecify": "1.0.1"
+      },
+      "release": 25
+    },
     "org.spongepowered:configurate-extra-dfu7": "patches/org.spongepowered_configurate-extra-dfu7.patch"
   },
   "javacArgs": [

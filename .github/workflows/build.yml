@@ -107,13 +107,9 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "maven-version=$minecraft-build.$BUILD_NUMBER+$version" >> "$GITHUB_OUTPUT"
 
-      # Fails when a project.lock does not match its project.jsonc
+      # Fails when project.lock does not match the manifests (the tooling modules have their own sections in it)
       - name: Resolve dependencies
-        run: |
-          set -euo pipefail
-          jpm install --frozen
-          (cd fidorial-build-tools && jpm install --frozen)
-          (cd fidorial-registry-generator && jpm install --frozen)
+        run: jpm install --frozen
 
       - name: Check formatting
         run: jpm run format --check

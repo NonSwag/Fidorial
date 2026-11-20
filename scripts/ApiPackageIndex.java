@@ -35,7 +35,11 @@ public final class ApiPackageIndex {
                     .forEach(packages::add);
         }
 
-        for (final Path jar : JpmInfo.dependencyJars(api, List.of("compile", "runtime"))) {
+        final List<Path> jars = JpmInfo.runtimeAndCompile(api).values().stream()
+                .filter(p -> !p.get("kind").getAsString().equals("workspace"))
+                .flatMap(p -> JpmInfo.jars(p).stream())
+                .toList();
+        for (final Path jar : jars) {
             try (ZipFile zip = new ZipFile(jar.toFile())) {
                 zip.stream()
                         .filter(e -> !e.isDirectory() && e.getName().endsWith(".class"))

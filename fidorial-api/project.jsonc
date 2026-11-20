@@ -1,12 +1,9 @@
 {
   "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
   "name": "fidorial-api",
-  // not inherited from the workspace root
-  "java": "25",
   "description": "Plugin API for the Fidorial Minecraft server",
   "license": "MIT",
   "url": "https://repo.euphyllia.moe",
-  "layout": "maven",
   "visibility": "public",
   "runtime": {
     "net.kyori:adventure-api": "5.2.0",

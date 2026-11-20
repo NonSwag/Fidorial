@@ -1,4 +1,3 @@
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.nio.file.Files;
@@ -16,7 +15,7 @@ import java.util.Set;
 public final class SpotBugs {
 
     public static void main(final String[] args) throws Exception {
-        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR")).getParent();
+        final Path root = Path.of(System.getenv("JPM_PROJECT_DIR"));
         final String jpm = System.getenv().getOrDefault("JPM_EXE", "jpm");
         if (new ProcessBuilder(jpm, "build", "fidorial-server").directory(root.toFile()).inheritIO().start().waitFor() != 0) {
             System.exit(1);
@@ -24,19 +23,11 @@ public final class SpotBugs {
 
         final JsonObject info = JpmInfo.read(root);
         final JsonObject server = JpmInfo.module(info, "fidorial-server");
-        final String version = info.get("version").getAsString();
 
         // what the server compiles and runs against: compileClasspath + runtimeClasspath in Gradle's terms
         final Set<String> aux = new LinkedHashSet<>();
-        for (final JsonElement e : server.getAsJsonArray("ideDependencies")) {
-            final JsonObject d = e.getAsJsonObject();
-            final String id = d.get("id").getAsString();
-            if (id.startsWith("workspace:")) {
-                final String name = id.substring("workspace:".length());
-                aux.add(root.resolve(name).resolve("dist").resolve(name + "-" + version + ".jar").toString());
-            } else if (d.has("jars")) {
-                d.getAsJsonArray("jars").forEach(j -> aux.add(j.getAsString()));
-            }
+        for (final JsonObject p : JpmInfo.packages(server, "compile", "runtime", "testCompile", "testRuntime").values()) {
+            JpmInfo.jars(p).forEach(j -> aux.add(j.toString()));
         }
 
         final Path report = root.resolve("fidorial-server/.cache/reports/spotbugs.html");

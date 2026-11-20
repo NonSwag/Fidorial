@@ -1,4 +1,3 @@
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import fr.euphyllia.fidorial.server.VersionConstants;
 
@@ -63,27 +62,15 @@ public final class BootstrapJar {
         bundled.put(serverJar.getFileName().toString(), serverJar);
 
         final Map<String, Path> others = new TreeMap<>();
-        for (final JsonElement e : server.getAsJsonArray("ideDependencies")) {
-            final JsonObject d = e.getAsJsonObject();
-            final String scope = d.get("scope").getAsString();
-            if (scope.equals("provided")) {
-                continue; // dev dependencies are never shipped
-            }
+        // dev dependencies are never shipped
+        for (final JsonObject d : JpmInfo.runtimeAndCompile(server).values()) {
             final String id = d.get("id").getAsString();
-            final List<Path> jars = new ArrayList<>();
-            if (id.startsWith("workspace:")) {
-                final String name = id.substring("workspace:".length());
-                jars.add(project.resolve(name).resolve("dist").resolve(name + "-" + version + ".jar"));
-            } else if (d.has("jars")) {
-                for (final JsonElement jar : d.getAsJsonArray("jars")) {
-                    jars.add(Path.of(jar.getAsString()));
-                }
-            }
-            for (final Path jar : jars) {
+            for (final Path jar : JpmInfo.jars(d)) {
                 if (!Files.isRegularFile(jar)) {
                     throw new IllegalStateException(jar + " (" + id + ") does not exist; build it first");
                 }
-                final Optional<String> coordinates = LibraryLists.coordinatesOf(jar);
+                // workspace modules and patched libraries have no coordinates a repository could serve
+                final Optional<String> coordinates = JpmInfo.coordinates(d);
                 if (coordinates.isEmpty()) {
                     others.put(jar.getFileName().toString(), jar);
                 } else if (coordinates.get().split(":")[2].endsWith("-SNAPSHOT")) {

@@ -75,8 +75,8 @@ veulent modifier le jeu. Ni Forge, ni Fabric, ni Mixin : un plugin s'abonne à d
 ## Démarrage
 
 Nécessite **Java 25** ou plus récent. Fidorial se compile avec [jpm](https://github.com/java-package-manager/jpm) ;
-tant qu'aucune version de jpm ne lit les descripteurs de modules Java 25, installe la version corrigée de
-`tools/jpm` :
+tant qu'aucune version de jpm n'a les correctifs dont il a besoin, `tools/jpm` installe jpm compilé depuis un
+commit fixé :
 
 ```bash
 git clone https://github.com/Euphillya/Fidorial.git
@@ -108,9 +108,12 @@ dependencies {
 | `fidorial-auth`               | Service de session Mojang et utilitaires de chiffrement                                                |
 | `fidorial-server`             | Le serveur lui-même : réseau, protocole, monde, entités, IA, commandes                                 |
 | `fidorial-registry-generator` | Génère les registres et catalogues de paquets depuis les data reports vanilla (`jpm run generate-registries`) |
-| `fidorial-brigadier`          | Brigadier de Mojang avec les patchs de Fidorial, recompilé depuis son jar de sources                  |
 | `fidorial-test-plugin`        | Plugin de référence qui exerce l'API (générateur custom, commandes, tests scénario)                    |
 | `fidorial-build-tools`        | Classpath des scripts de qualité (ErrorProne, étapes Spotless, SpotBugs) ; `scripts/` contient les scripts du build |
+
+`fidorial-build-tools` et `fidorial-registry-generator` sont des modules isolés : chacun est résolu à part, leurs
+dépendances ne changent donc jamais celles du serveur. Le Brigadier de Mojang est patché pour l'interopérabilité
+avec Adventure (`fidorial-server/patches/com.mojang_brigadier.patch`).
 
 Un plugin ne devrait importer que `fidorial-api`. Avoir besoin de quelque chose venant de `fidorial-server`,
 c'est un manque dans l'API — ouvre une issue.

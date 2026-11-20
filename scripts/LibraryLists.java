@@ -4,7 +4,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.HexFormat;
-import java.util.Optional;
 
 /**
  * Helpers shared by the build scripts. Plain JDK only, so that every script can use them.
@@ -32,39 +31,5 @@ final class LibraryLists {
         } catch (final java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    static Path jpmHome() {
-        final String home = System.getenv("JPM_HOME");
-        return home != null ? Path.of(home) : Path.of(System.getProperty("user.home"), ".jpm");
-    }
-
-    /**
-     * The Maven coordinates of a jar in jpm's repository ({@code ~/.jpm/repository}, Maven layout),
-     * {@code group:artifact:version[:classifier]}; empty for anything else: workspace modules,
-     * patched jars, plain files.
-     */
-    static Optional<String> coordinatesOf(final Path jar) {
-        final Path repository = jpmHome().resolve("repository").toAbsolutePath().normalize();
-        final Path file = jar.toAbsolutePath().normalize();
-        if (!file.startsWith(repository) || !file.getFileName().toString().endsWith(".jar")) {
-            return Optional.empty();
-        }
-        final Path relative = repository.relativize(file);
-        final int n = relative.getNameCount();
-        if (n < 4) {
-            return Optional.empty();
-        }
-        final String version = relative.getName(n - 2).toString();
-        final String artifact = relative.getName(n - 3).toString();
-        final String group = relative.subpath(0, n - 3).toString().replace(java.io.File.separatorChar, '.');
-        final String stem = relative.getFileName().toString().replaceFirst("\\.jar$", "");
-        final String base = artifact + "-" + version;
-        if (!stem.startsWith(base)) {
-            return Optional.empty();
-        }
-        // the native Netty transports only differ by their classifier
-        final String classifier = stem.length() > base.length() + 1 ? stem.substring(base.length() + 1) : null;
-        return Optional.of(group + ":" + artifact + ":" + version + (classifier != null ? ":" + classifier : ""));
     }
 }

@@ -72,7 +72,7 @@ so a plugin can swap an entire subsystem without patching a single line of serve
 ## Getting started
 
 Requires **Java 25** or newer. Fidorial builds with [jpm](https://github.com/java-package-manager/jpm); until a
-jpm release reads Java 25 module descriptors, install the patched build from `tools/jpm`:
+jpm release has the fixes it needs, `tools/jpm` installs jpm built from a pinned commit:
 
 ```bash
 git clone https://github.com/Euphillya/Fidorial.git
@@ -104,11 +104,14 @@ dependencies {
 | `fidorial-auth`               | Mojang session service and encryption utilities                                               |
 | `fidorial-server`             | The server itself: network, protocol, world, entities, AI, commands                           |
 | `fidorial-registry-generator` | Generates registries and packet catalogs from the vanilla data reports (`jpm run generate-registries`) |
-| `fidorial-brigadier`          | Mojang's Brigadier with Fidorial's patches, rebuilt from its sources jar                      |
 | `fidorial-bootstrap`          | The launcher at the root of the release jar: downloads the libraries, then starts the server  |
 | `fidorial-annotation-processor` | Compile-time annotation processors                                                          |
 | `fidorial-test-plugin`        | Reference plugin exercising the API (custom generator, commands, scenario tests)              |
 | `fidorial-build-tools`        | Classpath of the code-quality scripts (ErrorProne, Spotless steps, SpotBugs); `scripts/` holds the build scripts |
+
+`fidorial-build-tools` and `fidorial-registry-generator` are isolated modules: each is resolved on its own, so
+their dependencies never change the server's. Mojang's Brigadier is patched for Adventure interop
+(`fidorial-server/patches/com.mojang_brigadier.patch`).
 
 Plugins should only import from `fidorial-api`. Needing something out of `fidorial-server` is a gap in the
 API — please open an issue.
