@@ -62,8 +62,9 @@ public final class BootstrapJar {
         bundled.put(serverJar.getFileName().toString(), serverJar);
 
         final Map<String, Path> others = new TreeMap<>();
-        // dev dependencies are never shipped
-        for (final JsonObject d : JpmInfo.runtimeAndCompile(server).values()) {
+        // the runtime classpath: no dev dependencies, and no compile-only dependencies of libraries (annotations
+        // that Gradle-published libraries mark compileOnlyApi in their module metadata)
+        for (final JsonObject d : JpmInfo.packages(server, "runtime").values()) {
             final String id = d.get("id").getAsString();
             for (final Path jar : JpmInfo.jars(d)) {
                 if (!Files.isRegularFile(jar)) {

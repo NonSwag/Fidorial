@@ -68,25 +68,6 @@ final class JpmInfo {
         return out;
     }
 
-    /**
-     * What a module needs at run time and to compile its runtime dependencies against: everything its
-     * {@code runtime} dependencies reach (Gradle's runtimeClasspath plus compile-only dependencies of
-     * libraries), without what only its {@code dev} dependencies bring.
-     */
-    static Map<String, JsonObject> runtimeAndCompile(final JsonObject module) {
-        final Map<String, JsonObject> pkgs = packages(module, "compile", "runtime");
-        final List<Root> roots = roots(module, "runtime");
-        final Set<String> ids = new LinkedHashSet<>(closure(pkgs, roots, Set.of("compile", "provided")));
-        ids.addAll(closure(pkgs, roots, Set.of("compile", "runtime")));
-        final Map<String, JsonObject> out = new LinkedHashMap<>();
-        for (final String id : pkgs.keySet()) {
-            if (ids.contains(id)) {
-                out.put(id, pkgs.get(id));
-            }
-        }
-        return out;
-    }
-
     /** A root of a closure: a package and the exclusions declared on the dependency. */
     record Root(String id, Set<String> excludes) {
     }

@@ -35,7 +35,8 @@ public final class ApiPackageIndex {
                     .forEach(packages::add);
         }
 
-        final List<Path> jars = JpmInfo.runtimeAndCompile(api).values().stream()
+        // what the server has at runtime; a plugin's own copy of anything else still loads (parent-first falls back)
+        final List<Path> jars = JpmInfo.packages(api, "runtime").values().stream()
                 .filter(p -> !p.get("kind").getAsString().equals("workspace"))
                 .flatMap(p -> JpmInfo.jars(p).stream())
                 .toList();
