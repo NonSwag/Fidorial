@@ -4,7 +4,7 @@
 #
 # Why not the released binary: jpm 0.7.1's native binary is built with JDK 21, so it cannot read the
 # module-info.class of modules compiled for Java 25 and puts every one of them on the class path, which
-# breaks `requires fr.fidorial`. See docs/jpm-handoff.md; drop this script once a release has the fix.
+# breaks `requires fr.fidorial`. Drop this script once a jpm release has the fix.
 #
 #   tools/jpm/install.sh            # JPM_HOME changes the install root (default ~/.jpm)
 set -eu

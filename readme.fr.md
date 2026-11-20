@@ -76,7 +76,7 @@ veulent modifier le jeu. Ni Forge, ni Fabric, ni Mixin : un plugin s'abonne à d
 
 Nécessite **Java 25** ou plus récent. Fidorial se compile avec [jpm](https://github.com/java-package-manager/jpm) ;
 tant qu'aucune version de jpm ne lit les descripteurs de modules Java 25, installe la version corrigée de
-`tools/jpm` (voir [docs/jpm-handoff.md](docs/jpm-handoff.md)) :
+`tools/jpm` :
 
 ```bash
 git clone https://github.com/Euphillya/Fidorial.git
