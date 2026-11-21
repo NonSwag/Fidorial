@@ -62,14 +62,11 @@ jobs:
           fetch-depth: 0
       # Counted on the branch itself, so that builds of different branches do not share one sequence;
       # needs the whole history (fetch-depth: 0). fidorial-server reads BUILD_NUMBER (its BUILD_NUMBER define).
-      # The Minecraft version was in gradle.properties before the move to jpm, it is in fidorial-server/project.jsonc now.
       - name: Compute build number
         id: build-number
         run: |
           set -euo pipefail
-          base=$(git log -1 --format=%H \
-            -G'(^[[:space:]]*minecraftVersion[[:space:]]*[=:]|"MINECRAFT_VERSION_ID")' \
-            -- gradle.properties fidorial-server/project.jsonc)
+          base=$(git log -1 --format=%H -G'"MINECRAFT_VERSION_ID"' -- fidorial-server/project.jsonc)
           if [ -n "$base" ]; then
             number=$(( $(git rev-list --count "$base..HEAD") + 1 ))
           else
