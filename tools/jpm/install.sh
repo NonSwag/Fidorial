@@ -5,13 +5,13 @@
 # Why not a released binary: Fidorial needs jpm fixes that are not released yet (pull requests on
 # java-package-manager/jpm, merged together on its integration/fidorial branch): Java 25 module descriptors in
 # the native binary, patches with dependencies, isolated modules, workspace inheritance, `-J` javac flags,
-# `info --classpath`, JPM_EXE and //DEPS for scripts, and not caching failed downloads. Pinned to one commit so
+# `info --classpath`, JPM_EXE and //DEPS for scripts, and not caching failed downloads (no retries). Pinned to one commit so
 # every build uses the same jpm. Drop this script once a jpm release has them.
 #
 #   tools/jpm/install.sh            # JPM_HOME changes the install root (default ~/.jpm)
 set -eu
 
-commit=eb9d637b767898817d2af46809e28d30c9448f74
+commit=61c276e30da62ad1321a8d84d25eca0b33119a74
 home="${JPM_HOME:-$HOME/.jpm}"
 src="$home/src/jpm-${commit%"${commit#???????}"}"
 java_bin="${JAVA_HOME:+$JAVA_HOME/bin/}"
