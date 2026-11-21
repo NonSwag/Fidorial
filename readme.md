@@ -71,13 +71,15 @@ so a plugin can swap an entire subsystem without patching a single line of serve
 
 ## Getting started
 
-Requires **Java 25** or newer.
+Requires **Java 25** or newer. Fidorial builds with [jpm](https://github.com/java-package-manager/jpm), currently
+its canary build (the newest build of jpm's main branch, which has fixes no release has yet); jpm installs the JDK itself:
 
 ```bash
+curl -fsSL https://github.com/java-package-manager/jpm/releases/latest/download/install.sh | JPM_VERSION=canary sh
 git clone https://github.com/Euphillya/Fidorial.git
 cd Fidorial
-./gradlew build
-java -jar fidorial-server/build/libs/Fidorial-*.jar
+jpm build
+java -jar fidorial-server/dist/Fidorial-*.jar
 ```
 
 ## Writing a plugin
@@ -101,9 +103,15 @@ dependencies {
 | `fidorial-api`                | Public API: events, services, plugins, commands, entities, scheduler, registries, world types |
 | `fidorial-auth`               | Mojang session service and encryption utilities                                               |
 | `fidorial-server`             | The server itself: network, protocol, world, entities, AI, commands                           |
-| `fidorial-registry-generator` | Gradle plugin generating registries and packet catalogs from the vanilla data reports         |
+| `fidorial-registry-generator` | Generates registries and packet catalogs from the vanilla data reports (`jpm run generate-registries`) |
+| `fidorial-bootstrap`          | The launcher at the root of the release jar: downloads the libraries, then starts the server  |
+| `fidorial-annotation-processor` | Compile-time annotation processors                                                          |
 | `fidorial-test-plugin`        | Reference plugin exercising the API (custom generator, commands, scenario tests)              |
-| `build-logic`                 | Shared Gradle conventions (Spotless, toolchain)                                               |
+| `fidorial-build-tools`        | Classpath of the code-quality scripts (ErrorProne, Spotless steps, SpotBugs); `scripts/` holds the build scripts |
+
+`fidorial-build-tools` and `fidorial-registry-generator` are isolated modules: each is resolved on its own, so
+their dependencies never change the server's. Mojang's Brigadier is patched for Adventure interop
+(`fidorial-server/patches/com.mojang_brigadier.patch`).
 
 Plugins should only import from `fidorial-api`. Needing something out of `fidorial-server` is a gap in the
 API — please open an issue.
@@ -111,13 +119,16 @@ API — please open an issue.
 ## Development
 
 ```bash
-./gradlew :fidorial-server:run          # run a dev server (deploys the test plugin)
-./gradlew :fidorial-server:testScenarios # scenario tests against a real server
-./gradlew spotlessApply                  # format (Palantir Java Format)
-./gradlew spotlessCheck                  # what CI enforces
+jpm build                                    # every module, and fidorial-server/dist/Fidorial-<version>.jar
+jpm test                                     # scenario tests against a real server, with the test plugin
+(cd fidorial-server && jpm run server)       # run a dev server in fidorial-server/run (deploys the test plugin)
+jpm run format                               # format; `jpm run format --check` is what CI enforces
+jpm run lint                                 # ErrorProne + NullAway
+jpm run spotbugs                             # SpotBugs, report in fidorial-server/.cache/reports
+jpm run generate-registries                  # regenerate the registry sources and datasets
 ```
 
-CI builds on JDK 25, checks formatting, runs the tests and publishes the fat jar: a prerelease on every push
+CI builds on JDK 25, checks formatting, runs the tests, ErrorProne and SpotBugs and publishes the server jar: a prerelease on every push
 to `master`, a stable release on `v*` tags.
 
 ## Contributing

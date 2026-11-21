@@ -1,0 +1,150 @@
+// The Fidorial server. `jpm build` also writes the distributable launcher jar,
+// dist/Fidorial-<version>.jar (see fidorial-build-tools/scripts/BootstrapJar.java).
+{
+  "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
+  "name": "fidorial-server",
+  // the registry generator's output (jpm run generate-registries) is committed in src/generated/java
+  "sources": ["src/main/java", "src/generated/java"],
+  "visibility": "internal",
+  "main": "fr.euphyllia.fidorial.server.Main",
+  "defineClass": "fr.euphyllia.fidorial.server.BuildConfig",
+  "define": {
+    // Minecraft related constants (were gradle.properties).
+    // https://github.com/PrismarineJS/minecraft-data/blob/master/data/pc/common/protocolVersions.json
+    // MINECRAFT_VERSION_NAME rules: pre -> Pre-Release, snapshot -> Snapshot, rc -> Release Candidate
+    "MINECRAFT_VERSION_ID": { "type": "string", "value": "26.4-snapshot-8" },
+    "MINECRAFT_VERSION_NAME": { "type": "string", "value": "26.4 Snapshot 8" },
+    "PROTOCOL_VERSION": { "type": "int", "value": 1073742170 },
+    "DATA_VERSION": { "type": "int", "value": 5128 },
+    // Set by CI; -1 for a local build
+    "BUILD_NUMBER": { "type": "int", "env": "BUILD_NUMBER", "default": -1 },
+    // also written into spark-internal.properties ("filter"); keep it the version of me.lucko:spark-common below
+    "SPARK_VERSION": { "type": "string", "value": "1.10.182-SNAPSHOT" }
+  },
+  "filter": ["spark-internal.properties"],
+  "runtime": {
+    "workspace:fidorial-api": "*",
+    "workspace:fidorial-auth": "*",
+    "workspace:fidorial-bootstrap": "*",
+
+    // patched, see "patches"
+    "org.spongepowered:configurate-extra-dfu7": "4.3.0-SNAPSHOT",
+
+    "dev.faststats.metrics:config": "0.31.0",
+    "dev.faststats.metrics:core": "0.31.0",
+    "org.jline:jline-terminal-ffm": "4.4.8",
+    "org.jline:jline-reader": "4.4.8",
+    "ch.qos.logback:logback-classic": "1.6.6",
+    "io.netty:netty-buffer": "4.2.19.Final",
+    "io.netty:netty-common": "4.2.19.Final",
+    "io.netty:netty-codec-base": "4.2.19.Final",
+    "io.netty:netty-transport": "4.2.19.Final",
+    "io.netty:netty-transport-native-unix-common": "4.2.19.Final",
+    "io.netty:netty-transport-classes-epoll": "4.2.19.Final",
+    "io.netty:netty-transport-classes-kqueue": "4.2.19.Final",
+    "io.netty:netty-transport-classes-io_uring": "4.2.19.Final",
+    "io.netty:netty-transport-native-epoll:linux-x86_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.netty:netty-transport-native-epoll:linux-aarch_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.netty:netty-transport-native-io_uring:linux-x86_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.netty:netty-transport-native-io_uring:linux-aarch_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.netty:netty-transport-native-kqueue:osx-x86_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.netty:netty-transport-native-kqueue:osx-aarch_64": { "version": "4.2.19.Final", "runtimeOnly": true },
+    "io.github.classgraph:classgraph": "6.0.1",
+    "com.mojang:datafixerupper": "11.0.22",
+    "io.papermc:adventurex-nbt-dfu": "0.1.2",
+    "at.yawk.lz4:lz4-java": "1.12.1",
+    "com.github.luben:zstd-jni": "1.5.7-24",
+    "me.lucko:spark-common": {
+      "version": "1.10.182-SNAPSHOT",
+      "exclude": [
+        "net.kyori:adventure-api",
+        "net.kyori:adventure-key",
+        "net.kyori:adventure-text-serializer-gson",
+        "net.kyori:adventure-text-serializer-legacy",
+        "com.google.code.gson:gson",
+        "com.google.guava:guava",
+        "org.jspecify:jspecify"
+      ]
+    },
+    "me.lucko:spark-api": "0.1-SNAPSHOT",
+    "ca.spottedleaf.leafpile:common": "1.3.2",
+    "ca.spottedleaf.leafpile:converter": "1.3.2",
+    "ca.spottedleaf.leafpile:concurrentutil": "1.3.2"
+  },
+  "dev": {
+    "com.github.spotbugs:spotbugs-annotations": "4.10.5",
+    "org.jetbrains:annotations": "26.1.0",
+    "workspace:fidorial-annotation-processor": "*"
+  },
+  "scripts": {
+    "api-index": "../scripts/ApiPackageIndex.java",
+    "bootstrap-jar": "../scripts/BootstrapJar.java",
+    // `jpm run server`: a test server in fidorial-server/run, with the test plugin
+    "server": "../scripts/RunServer.java",
+    // scenario tests against a real server; also run by `jpm test`
+    "test-scenarios": "../scripts/ScenarioTests.java"
+  },
+  "hooks": {
+    "prebuild": "api-index",
+    "postbuild": "bootstrap-jar",
+    "posttest": "test-scenarios"
+  },
+  "patches": {
+    // Adventure interop: Message is a ComponentLike. The patched classes use Adventure and a record, so they
+    // get Adventure at compile time and are compiled for Java 25 rather than brigadier's Java 8. To change the
+    // patch: `jpm patch com.mojang:brigadier`, edit, `jpm patch --commit com.mojang:brigadier`.
+    "com.mojang:brigadier": {
+      "file": "patches/com.mojang_brigadier.patch",
+      "dependencies": {
+        "net.kyori:adventure-api": "5.2.0",
+        "net.kyori:adventure-text-serializer-plain": "5.2.0",
+        "org.jspecify:jspecify": "1.0.1"
+      },
+      "release": 25
+    },
+    "org.spongepowered:configurate-extra-dfu7": "patches/org.spongepowered_configurate-extra-dfu7.patch"
+  },
+  "javacArgs": [
+    "--add-reads", "fr.fidorial=ALL-UNNAMED",
+    "--add-reads", "fr.fidorial.server=ALL-UNNAMED",
+    // Was a patch to adventure-api's module-info. Only compilation needs it: the release launcher runs the
+    // server on the class path, and the provider using it is registered through META-INF/services.
+    "--add-exports", "net.kyori.adventure.api/net.kyori.adventure.internal.properties=fr.fidorial.server"
+  ],
+  "extensions": {
+    // `jpm run generate-registries` (from the root), see fidorial-registry-generator
+    "registry-generator": {
+      "prismarineMinecraftData": "26.4-snapshot-8",
+      "prismarineDataRepository": "Fidorial/minecraft-data", // PrismarineJS/minecraft-data
+      "prismarineDataRef": "ver/26.4-snapshot-8", // master
+      "generatedPackage": "fr.euphyllia.fidorial.server",
+      "registryDataPackage": "fr.euphyllia.fidorial.server.registry.data",
+      "registryKeysPackage": "fr.euphyllia.fidorial.server.registry.keys",
+      "dataGeneratorArguments": ["--reports", "--server"],
+      "recipesDataset": "src/main/resources/fidorial-data/recipes.json",
+      "lootTablesDataset": "src/main/resources/fidorial-data/loot_tables.json",
+      "blockMiningDataset": "src/main/resources/fidorial-data/block_mining.json",
+      "blockSupportDataset": "src/main/resources/fidorial-data/block_support.json",
+      "blockCollisionDataset": "src/main/resources/fidorial-data/block_collision.json",
+      "blockItemsDataset": "src/main/resources/fidorial-data/block_items.json",
+      "registries": {
+        "minecraft:command_argument_type": "ArgumentType",
+        "minecraft:command_suggestion_type": "SuggestionType",
+        "minecraft:entity_type": "EntityType"
+      },
+      "protocolIdRegistries": [
+        "minecraft:command_argument_type",
+        "minecraft:command_suggestion_type",
+        "minecraft:entity_type"
+      ],
+      "registryValuesPackage": "fr.euphyllia.fidorial.server.registry.data",
+      "generateRegistryKey": false,
+      "generatePacketCatalogs": true,
+      "generateBlockStates": true,
+      "blockPackage": "fr.fidorial.world.block",
+      "blockTypeKeysPackage": "fr.fidorial.registry.keys",
+      "itemKeysPackage": "fr.fidorial.registry.keys",
+      "blockEntityTypeKeysPackage": "fr.fidorial.registry.keys"
+    }
+  }
+}

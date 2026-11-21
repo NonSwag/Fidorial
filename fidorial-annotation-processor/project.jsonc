@@ -1,0 +1,9 @@
+// Annotation processors used by fidorial-api and fidorial-server at compile time.
+{
+  "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
+  "name": "fidorial-annotation-processor",
+  "visibility": "internal",
+  "dev": {
+    "org.jspecify:jspecify": "1.0.1"
+  }
+}

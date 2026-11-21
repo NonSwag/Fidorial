@@ -1,0 +1,27 @@
+// The plugin the scenario tests and `jpm run server` (in fidorial-server) load.
+{
+  "$schema": "https://github.com/java-package-manager/jpm/releases/latest/download/project.schema.json",
+  "name": "fidorial-test-plugin",
+  "visibility": "internal",
+  "dev": {
+    "workspace:fidorial-api": "*",
+    "com.mojang:brigadier": "1.3.11",
+    // a library the server downloads before loading the plugin, see "extensions"
+    "org.apache.commons:commons-text": "1.12.0"
+  },
+  "extensions": {
+    "fidorial": {
+      // Libraries the server downloads before loading this plugin (was Gradle's `fidorialLibrary`). They are
+      // compile-only here; scripts/PluginLibraries.java writes their resolved graph, transitive dependencies
+      // included, into META-INF/fidorial/libraries.list.
+      "libraries": ["org.apache.commons:commons-text"]
+    }
+  },
+  "scripts": {
+    "library-lock": "../scripts/PluginLibraries.java"
+  },
+  "hooks": {
+    "prebuild": "library-lock"
+  },
+  "javacArgs": ["--add-reads", "fr.fidorial.test=ALL-UNNAMED", "--add-reads", "fr.fidorial=ALL-UNNAMED"]
+}
