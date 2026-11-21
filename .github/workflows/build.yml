@@ -78,25 +78,12 @@ jobs:
           echo "BUILD_NUMBER=$number" >> "$GITHUB_ENV"
           echo "number=$number" >> "$GITHUB_OUTPUT"
 
-      # jpm needs a JDK 25 to build itself from source (tools/jpm/install.sh) and builds Fidorial with it.
-      - name: Set up JDK 25
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: 25
-
-      - name: Cache jpm downloads
-        uses: actions/cache@v5
-        with:
-          path: ~/.jpm/repository
-          key: jpm-${{ runner.os }}-${{ hashFiles('**/project.lock') }}
-          restore-keys: jpm-${{ runner.os }}-
-
+      # jpm installs the JDK each module asks for ("java": "25") and caches downloads between runs.
+      # A canary build of jpm's main branch: it has the fixes Fidorial needs, which no release has yet.
       - name: Install jpm
-        run: |
-          set -euo pipefail
-          tools/jpm/install.sh
-          echo "$HOME/.jpm/bin" >> "$GITHUB_PATH"
+        uses: java-package-manager/setup-jpm@v1
+        with:
+          version: 0.7.1-55b3276
 
       - name: Read version
         id: version
