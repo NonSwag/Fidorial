@@ -79,11 +79,11 @@ jobs:
           echo "number=$number" >> "$GITHUB_OUTPUT"
 
       # jpm installs the JDK each module asks for ("java": "25") and caches downloads between runs.
-      # A canary build of jpm's main branch: it has the fixes Fidorial needs, which no release has yet.
+      # jpm's canary channel (the newest build of its main branch): it has the fixes Fidorial needs, which no release has yet.
       - name: Install jpm
         uses: java-package-manager/setup-jpm@v1
         with:
-          version: 0.7.1-55b3276
+          version: canary
 
       - name: Read version
         id: version

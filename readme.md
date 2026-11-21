@@ -72,10 +72,10 @@ so a plugin can swap an entire subsystem without patching a single line of serve
 ## Getting started
 
 Requires **Java 25** or newer. Fidorial builds with [jpm](https://github.com/java-package-manager/jpm), currently
-the canary build `0.7.1-55b3276` (jpm's main branch, which has fixes no release has yet); jpm installs the JDK itself:
+its canary build (the newest build of jpm's main branch, which has fixes no release has yet); jpm installs the JDK itself:
 
 ```bash
-curl -fsSL https://github.com/java-package-manager/jpm/releases/latest/download/install.sh | JPM_VERSION=0.7.1-55b3276 sh
+curl -fsSL https://github.com/java-package-manager/jpm/releases/latest/download/install.sh | JPM_VERSION=canary sh
 git clone https://github.com/Euphillya/Fidorial.git
 cd Fidorial
 jpm build

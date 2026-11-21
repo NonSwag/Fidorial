@@ -75,11 +75,11 @@ veulent modifier le jeu. Ni Forge, ni Fabric, ni Mixin : un plugin s'abonne à d
 ## Démarrage
 
 Nécessite **Java 25** ou plus récent. Fidorial se compile avec [jpm](https://github.com/java-package-manager/jpm),
-pour l'instant la version canary `0.7.1-55b3276` (la branche main de jpm, qui a des correctifs qu'aucune version publiée n'a
+pour l'instant sa version canary (le dernier build de la branche main de jpm, qui a des correctifs qu'aucune version publiée n'a
 encore) ; jpm installe lui-même le JDK :
 
 ```bash
-curl -fsSL https://github.com/java-package-manager/jpm/releases/latest/download/install.sh | JPM_VERSION=0.7.1-55b3276 sh
+curl -fsSL https://github.com/java-package-manager/jpm/releases/latest/download/install.sh | JPM_VERSION=canary sh
 git clone https://github.com/Euphillya/Fidorial.git
 cd Fidorial
 jpm build
